@@ -7,10 +7,12 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
+import api from "../api/contacts";
 import Header from "./Header";
 import AddContact from "./AddContact";
 import ContactList from "./ContactList";
 import CardDetails from "./CardDetails";
+import EditContact from "./EditContact";
 
 function App() {
   // const contacts = [
@@ -28,17 +30,81 @@ function App() {
 
   const LOCAL_STORAGE_KEY = "contacts";
   // This is the syntax to use useState
-  const [contacts, setContacts] = useState(
-    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) ?? []
-  );
+  // const [contacts, setContacts] = useState(
+  //   JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) ?? []
+  // );
   // usestate([]) inside the paranthesis we pass the initial value that we want to store in contacts
   // By using setContacts we will update the contacts value
 
-  const addContactHandler = (contact) => {
+  const [contacts, setContacts] = useState([]);
+  //RetrieveContacts is getting information from the json we are running it on the server
+  // by using this function I'm getting contact values from db.json file using api
+  const retrieveContacts = async () => {
+    const response = await api.get("/contacts");
+    return response.data;
+  };
+  // This is for add contact to the list
+  // const addContactHandler = (contact) => {
+  //   setContacts([...contacts, { id: uuid(), ...contact }]);
+  // };
+
+  // To add from the api
+  const addContactHandler = async (contact) => {
+    const request = {
+      id: uuid(),
+      ...contact,
+    };
+    const response = await api.post("/contacts", request);
     setContacts([...contacts, { id: uuid(), ...contact }]);
   };
+
+  // const UpdateContactHandler = async () => {
+  //   // const response = await api.put(`/contacts/${contacts.id}`, contacts);
+  //   const response = await api.put(`/contacts/${contacts.id}`, contacts);
+
+  //   const { id, name, email } = response.data;
+  //   setContacts(
+  //     contacts.map((contact) => {
+  //       return contact.id === id ? { ...response.data } : contact;
+  //     })
+  //   );
+  // };
+
+  const UpdateContactHandler = async (id, updatedData) => {
+    try {
+      const response = await api.put(`/contacts/${id}`, updatedData);
+      const updatedContact = response.data;
+
+      setContacts((prevContacts) =>
+        prevContacts.map((contact) =>
+          contact.id === updatedContact.id ? updatedContact : contact
+        )
+      );
+    } catch (error) {
+      console.error("Error updating contact:", error);
+      throw error; // Rethrow the error to handle it in EditContact component
+    }
+  };
+
+  // const UpdateContactHandler = async () => {
+  //   const response = await api.put(`/contacts/${contacts.id}`, {
+  //     name: contacts.name,
+  //     email: contacts.email,
+  //   });
+  //   const updatedContact = response.data;
+
+  //   setContacts((prevContacts) =>
+  //     prevContacts.map((contact) =>
+  //       contact.id === updatedContact.id ? updatedContact : contact
+  //     )
+  //   );
+  // };
+
   // We are using this event handler to delete the contactlist
-  const removeContactHandler = (id) => {
+  // we are chnaging this to api call as well
+
+  const removeContactHandler = async (id) => {
+    await api.delete(`/contacts/${id}`);
     const newContactList = contacts.filter((contact) => {
       return contact.id !== id;
     });
@@ -46,18 +112,24 @@ function App() {
     setContacts(newContactList);
   };
 
-  // We are using this below to store the values entered in the form
+  // We are using this below to store the values entered in the form in a local storage
   useEffect(() => {
     console.log("Inside set");
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(contacts));
+    // localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(contacts));
   }, [contacts]);
 
   // We are using this below to print the values entered in the form on to the webpage
-  // useEffect(() => {
-  //   console.log("Inside get");
-  //   const retriveContacts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-  //   if (retriveContacts) setContacts(retriveContacts);
-  // }, []);
+  useEffect(() => {
+    //   console.log("Inside get");
+    //   const retriveContacts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    //   if (retriveContacts) setContacts(retriveContacts);
+    const getAllContacts = async () => {
+      const allContacts = await retrieveContacts();
+      if (allContacts) setContacts(allContacts);
+    };
+
+    getAllContacts();
+  }, []);
 
   // if you want pass some information from parent to child we will use props.
   // if you want pass from child to parent we will use event handlers
@@ -83,6 +155,14 @@ function App() {
             path="/add"
             element={<AddContact addContactHandler={addContactHandler} />}
           />
+
+          <Route
+            path="/edit"
+            element={
+              <EditContact UpdateContactHandler={UpdateContactHandler} />
+            }
+          />
+
           <Route path="/contact/:id" element={<CardDetails />} />
         </Routes>
       </Router>
