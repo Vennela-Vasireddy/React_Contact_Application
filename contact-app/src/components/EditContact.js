@@ -15,7 +15,6 @@ const EditContact = ({ UpdateContactHandler }) => {
       alert("ALl the fields are mandatory!");
       return;
     }
-
     UpdateContactHandler(id, { name: newName, email: newEmail });
     setNewName("");
     setNewEmail("");
