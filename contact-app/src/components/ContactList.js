@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useRef } from "react";
 import ContactCard from "./ContactCard";
 import { Link } from "react-router-dom";
 // map works as a iterator. It iterates through the elements in list and converts javascript to jsx.
 const ContactList = (props) => {
+  console.log(props);
+  // props stores all the props passing to the contact list
+  const inputEl = useRef("");
   const deleteConactHandler = (id) => {
     props.getContactId(id);
   };
@@ -18,6 +21,11 @@ const ContactList = (props) => {
       />
     );
   });
+
+  const getSearchTerm = () => {
+    props.searchKeyword(inputEl.current.value);
+  };
+
   return (
     <div className="main">
       <h2>
@@ -28,7 +36,27 @@ const ContactList = (props) => {
           </button>
         </Link>
       </h2>
-      <div className="ui celled List"> {renderContactList} </div>
+      <br></br>
+      <div className="ui search">
+        <div className="ui icon input">
+          <input
+            ref={inputEl}
+            type="text"
+            placeholder="search Contacts"
+            className="prompt"
+            value={props.term}
+            onChange={getSearchTerm}
+          ></input>
+          <i className="search icon"></i>
+        </div>
+      </div>
+      <br></br>
+      <div className="ui celled List">
+        {" "}
+        {renderContactList.length > 0
+          ? renderContactList
+          : "No Contacts Available"}{" "}
+      </div>
     </div>
   );
 };

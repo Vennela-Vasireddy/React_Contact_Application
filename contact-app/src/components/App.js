@@ -37,6 +37,9 @@ function App() {
   // By using setContacts we will update the contacts value
 
   const [contacts, setContacts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResult, setSearchResult] = useState([]);
+
   //RetrieveContacts is getting information from the json we are running it on the server
   // by using this function I'm getting contact values from db.json file using api
   const retrieveContacts = async () => {
@@ -112,6 +115,21 @@ function App() {
     setContacts(newContactList);
   };
 
+  const searchHandler = (searchTerm) => {
+    setSearchTerm(searchTerm);
+    if (searchTerm !== "") {
+      const newContactList = contacts.filter((contact) => {
+        return Object.values(contact)
+          .join(" ")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+      });
+      setSearchResult(newContactList);
+    } else {
+      setSearchResult(contacts);
+    }
+  };
+
   // We are using this below to store the values entered in the form in a local storage
   useEffect(() => {
     console.log("Inside set");
@@ -146,16 +164,13 @@ function App() {
             exact
             element={
               <ContactList
-                contacts={contacts}
+                contacts={searchTerm.length < 1 ? contacts : searchResult}
                 getContactId={removeContactHandler}
+                term={searchTerm}
+                searchKeyword={searchHandler}
               />
             }
           />
-          <Route
-            path="/add"
-            element={<AddContact addContactHandler={addContactHandler} />}
-          />
-
           <Route
             path="/edit"
             element={
